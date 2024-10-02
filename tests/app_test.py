@@ -2,7 +2,9 @@ import json
 import pytest
 from pathlib import Path
 from project.app import app, db
+
 TEST_DB = "test.db"
+
 
 @pytest.fixture
 def client():
@@ -72,6 +74,7 @@ def test_messages(client):
     assert b"&lt;Hello&gt;" in rv.data
     assert b"<strong>HTML</strong> allowed here" in rv.data
 
+
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
     rv = client.get("/delete/1")
@@ -81,6 +84,7 @@ def test_delete_message(client):
     rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
+
 
 def test_search(client):
     """Unit test for search function"""
@@ -96,6 +100,7 @@ def test_search(client):
     response = client.get("/search/?query=Hello", content_type="html/text")
     assert response.status_code == 200
     assert b"Hello" in response.data
+
 
 def test_login_delete(client):
     """Unit test for login then delete function"""
