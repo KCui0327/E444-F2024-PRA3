@@ -1,6 +1,5 @@
 import sqlite3
 from pathlib import Path
-
 from flask import Flask, g, render_template, request, session, \
                   flash, redirect, url_for, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -75,7 +74,6 @@ def delete_entry(post_id):
     """Deletes post from database."""
     result = {'status': 0, 'message': 'Error'}
     try:
-        db.session.query(models.Post).filter_by(id=post_id).delete()
         db.session.commit()
         result = {'status': 1, 'message': "Post Deleted"}
         flash('The entry was deleted.')
@@ -83,6 +81,13 @@ def delete_entry(post_id):
         result = {'status': 0, 'message': repr(e)}
     return jsonify(result)
 
+@app.route('/search/', methods=['GET'])
+def search():
+    query = request.args.get("query")
+    entries = db.session.query(models.Post)
+    if query:
+        return render_template('search.html', entries=entries, query=query)
+    return render_template('search.html')
 
 if __name__ == "__main__":
     app.run()
