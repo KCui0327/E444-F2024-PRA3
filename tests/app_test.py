@@ -4,7 +4,6 @@ from pathlib import Path
 from project.app import app, db
 TEST_DB = "test.db"
 
-
 @pytest.fixture
 def client():
     BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,6 +74,42 @@ def test_messages(client):
 
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
-    rv = client.get('/delete/1')
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 0
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+def test_search(client):
+    """Unit test for search function"""
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.post(
+        "/add",
+        data=dict(title="<Hello>", text="<strong>HTML</strong> allowed here"),
+        follow_redirects=True,
+    )
+
+    assert b"Hello" in rv.data
+
+    response = client.get("/search/?query=Hello", content_type="html/text")
+    assert response.status_code == 200
+    assert b"Hello" in response.data
+
+def test_login_delete(client):
+    """Unit test for login then delete function"""
+    response = client.get("/delete/1", content_type="html/text")
+    assert response.status_code == 401
+    assert b"lease log in." in response.data
+
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.post(
+        "/add",
+        data=dict(title="<Hello>", text="<strong>HTML</strong> allowed here"),
+        follow_redirects=True,
+    )
+
+    assert b"Hello" in rv.data
+    response = client.get("/delete/1", content_type="html/text")
+    assert response.status_code == 200
